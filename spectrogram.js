@@ -1,41 +1,45 @@
+var canvas = document.getElementById('spectrogram')
+  // We're using a buffer canvas in order to get a bit
+  // of a performance boost. Instead of rerendering previous
+  // spectrogram slices at each iteration, we can render just the
+  // new one and translate the old slices.
+  , canvasBuffer = document.createElement('canvas');
 
-var drawSpectrogram = function(spectrogram) {
-  var canvas = document.getElementById('spectrogram')
-    , ctx = canvas.getContext('2d');
+var drawSpectrogram = function(spectrogramSlice) {
+  var speed = 1;
 
-  // We'll follow the convention of displaying low frequencies on the bottom and
-  // high frequencies on the top.
-  for (var x = 0; x < spectrogram.length; x++) {
-    for (var y = 0; y < spectrogram[x].length; y++) {
-      // We multiply by two because the input we get is in the range 0-128.
-      var intensity = 255 - spectrogram[x][y] * 2;
-      ctx.fillStyle = "rgb("+intensity+", "+intensity+", "+intensity+")";
+  // This will both ensure they have the same size, and will clear the canvasBuffer.
+  // I like to use "window." to really highlight that they're global.
+  window.canvasBuffer.width  = window.canvas.width;
+  window.canvasBuffer.height = window.canvas.height;
 
-      var width = ctx.canvas.width / spectrogram.length
-        , height = ctx.canvas.height / spectrogram[x].length
-        , startX = x * width
-        , startY = y * height;
-      ctx.fillRect(startX, startY, startX+width, startY+height);
-    }
+  var ctx = window.canvas.getContext('2d');
+  var ctxBuffer = window.canvasBuffer.getContext('2d');
+  ctxBuffer.drawImage(window.canvas, 0, 0, window.canvas.width, window.canvas.height);
+
+  for (var i = 0; i < spectrogramSlice.length; i++) {
+    var intensity = spectrogramSlice[i];
+    ctx.fillStyle = "rgb("+intensity+", "+intensity+", "+intensity+")";
+
+    var ratio = i / spectrogramSlice.length;
+    var y = Math.round(ratio * window.canvas.height);
+
+    ctx.fillRect(window.canvas.width - speed, window.canvas.height - y, speed, speed);
   }
-};
 
-var spectrogram = [];
+  // Copy the buffer to the visible canvas
+  ctx.translate(-speed, 0);
+  ctx.drawImage(window.canvasBuffer, 0, 0, window.canvas.width, window.canvas.height);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+};
 
 var drawAudio = function(analyser) {
   window.requestAnimationFrame(drawAudio.bind(undefined, analyser));
 
   var audioData = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(audioData);
-  spectrogram.unshift(audioData);
 
-  // Restrict the spectrogram history
-  var maxLength = 50;
-  if (spectrogram.length > maxLength) {
-    spectrogram.length = maxLength;
-  }
-
-  drawSpectrogram(spectrogram);
+  drawSpectrogram(audioData);
 };
 
 var getMic = function(callback) {
@@ -45,7 +49,8 @@ var getMic = function(callback) {
     var mic = ctx.createMediaStreamSource(stream);
 
     var analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048
+    analyser.smoothingTimeConstant = 0;
+    analyser.fftSize = 2048;
 
     mic.connect(analyser);
 

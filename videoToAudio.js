@@ -31,7 +31,7 @@ var getImageData = function(url, callback) {
 // Scales a value, where minVal <= val <= maxVal
 // and returns a value r, where minScale <= r <= maxScale.
 // Just uses linear scaling.
-var scale = function(val, minVal, maxVal, minScale, maxScale) {
+var linScale = function(val, minVal, maxVal, minScale, maxScale) {
   var ratio = (maxScale - minScale) / (maxVal - minVal);
   return minScale + ratio * (val - minVal);
 };
@@ -43,7 +43,7 @@ var scale = function(val, minVal, maxVal, minScale, maxScale) {
 var sumSines = function(t, freqData, minFreq, maxFreq) {
   var sum = 0;
   for (var i = 0; i < freqData.length; i++) {
-    var freq = scale(i, 0, freqData.length, minFreq, maxFreq);
+    var freq = linScale(i, 0, freqData.length, minFreq, maxFreq);
     sum += freqData[i] * Math.sin(freq * t);
   }
   return sum;
@@ -55,36 +55,36 @@ var fillAudioBufferWithVideoData = function(ctx, audioBuffer, imgData) {
   // (since it's not a normal array).
   var audioBufferIndex = 0;
   for (var x = 0; x < imgData.width; x++) {
-    var row = [];
+    var column = [];
 
     // The sumSines fn later assumes the lower entries in the freqData array are
     // the lower frequencies, and since most spectrogram visualize lower on the bottom,
     // we essentially need to flip the image horizontally (i.e. scan from the bottom up).
     for (var y = imgData.height-1; y >= 0; y--) {
       var intensity = getImageDataIntensity(imgData, x, y);
-      row.push(intensity);
+      column.push(intensity);
     }
-    // ctx.sampleRate/n  means, "play this (row) for 1/n seconds".
+    // ctx.sampleRate/n  means, "play this (column) for 1/n seconds".
     var oldAudioBufferIndex = audioBufferIndex;
-    for (; audioBufferIndex < oldAudioBufferIndex + ctx.sampleRate/40; audioBufferIndex++) {
+    for (; audioBufferIndex < oldAudioBufferIndex + ctx.sampleRate/60; audioBufferIndex++) {
       // The minFreq and maxFreq here have just been found by trial-and-error.
-      data[audioBufferIndex] = sumSines(audioBufferIndex, row, 0.06, 1.3);
+      data[audioBufferIndex] = sumSines(audioBufferIndex, column, 0.05, 1.5);
     }
   }
 };
 
+var audioCtx = new AudioContext();
 var handleImageData = function(imgData) {
-  var ctx = new AudioContext();
-  ctx.sampleRate = 100;
-  var frameCount = ctx.sampleRate * 100; // *n makes the buffer n seconds long.
+  audioCtx.sampleRate = 44100;
+  var frameCount = audioCtx.sampleRate * 10; // *n makes the buffer n seconds long.
 
-  var audioBuffer = ctx.createBuffer( 1, frameCount, ctx.sampleRate );
-  fillAudioBufferWithVideoData(ctx, audioBuffer, imgData);
+  var audioBuffer = audioCtx.createBuffer( 1, frameCount, audioCtx.sampleRate );
+  fillAudioBufferWithVideoData(audioCtx, audioBuffer, imgData);
 
   var playSound = function() {
-    var src = ctx.createBufferSource();
+    var src = audioCtx.createBufferSource();
     src.buffer = audioBuffer;
-    src.connect(ctx.destination);
+    src.connect(audioCtx.destination);
 
     src.start();
   }
@@ -94,6 +94,7 @@ var handleImageData = function(imgData) {
 
 document.getElementById('videoToAudio').addEventListener('click', function() {
   getImageData('darth-vader.jpg', handleImageData);
+  //getImageData('me100.jpg', handleImageData);
   //getImageData('nike.jpg', handleImageData);
   //getImageData('diag.png', handleImageData);
   //getImageData('freq2.png', handleImageData);
