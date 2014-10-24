@@ -7,14 +7,28 @@
     </style>
   </head>
   <body>
-    <img src="me.jpg" />
-    <img src="diag.png" />
-    <img src="freq2.png" />
-    <canvas id="spectrogram" width="400" height="600"></canvas>
+    <video id="cam" autoplay muted width="100" height="100"></video>
+    <img src="darth-vader.jpg" />
+    <!--<img src="diag.png" />
+    <img src="freq2.png" />-->
+    <canvas id="spectrogram" width="300" height="300"></canvas>
+    <canvas id="tmp" width="100" height="100"></canvas>
     <p>
       <button id="videoToAudio">Audioify!</button>
     </p>
+
     <script src="videoToAudio.js"></script>
     <script src="spectrogram.js"></script>
+
+    <script>
+      // Due to a bug in webkit, we have to wait until the page has loaded
+      // until we can ask for the mic.
+      window.addEventListener('load', function(e) {
+        navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
+          handleMic(stream, drawAudio);
+          handleCam(stream);
+        }, function(){});
+      }, false);
+    </script>
   </body>
 </html>

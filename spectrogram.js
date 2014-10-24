@@ -6,7 +6,8 @@ var canvas = document.getElementById('spectrogram')
   , canvasBuffer = document.createElement('canvas');
 
 var drawSpectrogram = function(spectrogramSlice) {
-  var speed = 1;
+  var speed = 20;
+  //var speed = 1;
 
   // This will both ensure they have the same size, and will clear the canvasBuffer.
   // I like to use "window." to really highlight that they're global.
@@ -17,11 +18,14 @@ var drawSpectrogram = function(spectrogramSlice) {
   var ctxBuffer = window.canvasBuffer.getContext('2d');
   ctxBuffer.drawImage(window.canvas, 0, 0, window.canvas.width, window.canvas.height);
 
-  for (var i = 0; i < spectrogramSlice.length; i++) {
+  // By trial-and-error I've found that it seems to be inconsistent for very high frequencies,
+  // so these are just ignored. (Also because we don't send any image-data above that range.)
+  var relevantFrequencies = spectrogramSlice.length - 300;
+  for (var i = 0; i < relevantFrequencies; i++) {
     var intensity = spectrogramSlice[i];
     ctx.fillStyle = "rgb("+intensity+", "+intensity+", "+intensity+")";
 
-    var ratio = i / spectrogramSlice.length;
+    var ratio = i / relevantFrequencies;
     var y = Math.round(ratio * window.canvas.height);
 
     ctx.fillRect(window.canvas.width - speed, window.canvas.height - y, speed, speed);
@@ -29,7 +33,8 @@ var drawSpectrogram = function(spectrogramSlice) {
 
   // Copy the buffer to the visible canvas
   ctx.translate(-speed, 0);
-  ctx.drawImage(window.canvasBuffer, 0, 0, window.canvas.width, window.canvas.height);
+  ctx.drawImage(window.canvasBuffer, 0, 0, window.canvas.width, window.canvas.height,
+                                     0, 0, window.canvas.width, window.canvas.height);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 };
 
@@ -42,25 +47,15 @@ var drawAudio = function(analyser) {
   drawSpectrogram(audioData);
 };
 
-var getMic = function(callback) {
+var handleMic = function(stream, callback) {
   var ctx = new AudioContext();
+  var mic = ctx.createMediaStreamSource(stream);
+  var analyser = ctx.createAnalyser();
 
-  navigator.webkitGetUserMedia({ audio: true }, function(stream) {
-    var mic = ctx.createMediaStreamSource(stream);
+  analyser.smoothingTimeConstant = 0;
+  analyser.fftSize = 2048;
 
-    var analyser = ctx.createAnalyser();
-    analyser.smoothingTimeConstant = 0;
-    analyser.fftSize = 2048;
+  mic.connect(analyser);
 
-    mic.connect(analyser);
-
-    callback(analyser);
-  }, function(){});
+  callback(analyser);
 };
-
-// Due to a bug in webkit, we have to wait until the page has loaded
-// until we can ask for the mic.
-window.addEventListener('load', function(e) {
-  getMic(drawAudio);
-}, false);
-
