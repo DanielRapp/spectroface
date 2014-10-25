@@ -52,21 +52,36 @@
         can then be interpreted by a spectrogram?
       </p>
       <p>
-        The solution is simple. Just scan the image, column by column,
-        varying the volume (amplitude) of each frequency (row) as we go along.
-        Say the bottom of the image represents the frequency 3 kHz and the top 15 kHz,
-        then a black pixel on the bottom row means "turn off the 3000 Hz tone", whereas a white pixel means
-        "blast the 3000 Hz tone to the max".
+        The solution is simple. Let
+        each row of the image represent a sinusoid (pure tone) at some frequency.
+        Say the bottom of the image represents the frequency 5 kHz and the top 15 kHz.
+        The grayscale intensity of each pixel determines the amplitude (volume) of each sinusoid.
+        So a black pixel on the bottom row means "turn off the 5000 Hz tone", whereas a white pixel means
+        "blast a 5000 Hz tone at max volume".
+      </p>
+      <p>
+        Now just scan the image, column by column. Starting with the
+        first column, figuring out the intensity
+        of the sinuoid for 3000 Hz, then 3001 Hz, then 3002 Hz etc, finally
+        outputting them all as a sound (or rather, their sum),
+        and then move over to the second column.
+      </p>
+      <p>
+        This will produce the, awful, but pretty darn radical, sound below.
       </p>
       <div class="live-demo-cam">
         <canvas id="spectrogram2" class="spectrogram" width="300" height="300"></canvas>
         <video id="cam1" autoplay muted height="300"></video>
         <div class="audiofy">
           <button id="camToAudio" class="pure-button pure-button-primary">Audiofy yourself</button>
+          <button id="vader" class="pure-button pure-button-primary">Audiofy Vader</button>
         </div>
       </div>
       <p>
-        <i>Note that you'll need to turn on your speakers and run Chrome for this.</i>
+        <i>
+          Note that you'll need to turn on your speakers and run Chrome for this.
+          If you're seeing a lot of distortion you may need to lower the volume.
+        </i>
       </p>
 
 
@@ -85,7 +100,7 @@
 
       <h2>Take it to the limit</h2>
       <p>
-        Finally let's pump up the refresh rate significantly. Something interesting starts to happen.
+        Something interesting starts to happen if we increase the refresh rate significantly.
       </p>
       <div class="live-demo-video">
         <canvas id="spectrogram4" class="spectrogram" width="300" height="300"></canvas>
@@ -98,6 +113,12 @@
         It starts acting like an instrument! Notice that if you place your finger over the webcam,
         the sound is muted. You can produce low-pass or high-pass filters by covering only part of webcam.
       </p>
+      <div class="demo">
+        <video muted autoplay="autoplay" loop="loop" controls width="400">
+          <source src="img/demo.ogv" type="video/ogg">
+        </video>
+      </div>
+
 
       <div id="author">
         Written by <a href="https://github.com/DanielRapp">Daniel Rapp</a>.
@@ -106,9 +127,9 @@
     </div>
 
 
-    <script src="videoToAudio.js"></script>
-    <script src="spectrogram.js"></script>
-    <script src="data-note.js"></script>
+    <script src="src/videoToAudio.js"></script>
+    <script src="src/spectrogram.js"></script>
+    <script src="src/data-note.js"></script>
 
     <script>
       // Due to a bug in webkit, we have to wait until the page has loaded

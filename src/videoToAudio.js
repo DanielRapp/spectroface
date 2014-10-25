@@ -57,7 +57,7 @@ var fillAudioBufferWithVideoData = function(audioBuffer, imgData, allocatedSecon
     // sampleRate*n  just becomes, "play this (column) for n seconds".
     for (; audioBufferIndex < oldAudioBufferIndex + sampleRate*timePerCol; audioBufferIndex++) {
       // The minFreq and maxFreq here have just been found by trial-and-error.
-      data[audioBufferIndex] = sumSines(audioBufferIndex, column, 0.4, 2.2);
+      data[audioBufferIndex] = sumSines(audioBufferIndex, column, 0.5, 2.0);
     }
   }
 };
@@ -81,7 +81,11 @@ var handleImageData = function(timeToRender, imgData) {
   var playSound = function() {
     var src = audioCtx.createBufferSource();
     src.buffer = audioBuffer;
-    src.connect(audioCtx.destination);
+
+    // The compressor is supposed to lower clipping a bit.
+    var compressor = audioCtx.createDynamicsCompressor();
+    src.connect(compressor);
+    compressor.connect(audioCtx.destination);
 
     src.start(0);
   }
@@ -146,11 +150,12 @@ document.getElementById('cam1').addEventListener('click', function() {
   getCamImageData(this, 100, handleImageData.bind(undefined, 5));
 });
 
-// Easter eggs!
-document.getElementById('spectrogram2').addEventListener('click', function() {
+document.getElementById('vader').addEventListener('click', function() {
   getUrlImageData('img/darth-vader-mini.jpg', handleImageData.bind(undefined, 5));
 });
 
+
+// Easter eggs!
 document.getElementById('spectrogram3').addEventListener('click', function() {
   getUrlImageData('img/batman100.jpeg', handleImageData.bind(undefined, 5));
 });

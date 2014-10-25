@@ -19,6 +19,8 @@ h2 {
   font-size: 15px;
   margin-top: 100px;
   font-family: "Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana,sans-serif;
+  padding-top: 50px;
+  border-top: 1px solid #555;
 }
 
 .content {
@@ -32,7 +34,7 @@ h2 {
   font-size: 20px;
   line-height: 1.5;
   margin-top: 30px;
-  margin-bottom: 100px;
+  margin-bottom: 150px;
 }
 
 .content > p {
@@ -94,4 +96,10 @@ h2 {
 #activate {
   text-align: center;
   margin-bottom: 10px;
+}
+
+.demo {
+  width: 400px;
+  margin: auto;
+  padding-top: 50px;
 }
