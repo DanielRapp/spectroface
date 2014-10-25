@@ -5,9 +5,17 @@ var canvas = document.getElementById('spectrogram')
   // new one and translate the old slices.
   , canvasBuffer = document.createElement('canvas');
 
+var copyCanvas = function(canvas, canvasToCopyOnto) {
+  var ctx = canvas.getContext('2d');
+  var ctxExtra = canvasToCopyOnto.getContext('2d');
+  ctxExtra.drawImage(canvas, canvas.width - canvasToCopyOnto.width, 0,
+                             canvasToCopyOnto.width, canvasToCopyOnto.height,
+                             0, 0, canvasToCopyOnto.width, canvasToCopyOnto.height);
+};
+
 var drawSpectrogram = function(spectrogramSlice) {
-  var speed = 20;
-  //var speed = 1;
+  //var speed = 20;
+  var speed = 1;
 
   // This will both ensure they have the same size, and will clear the canvasBuffer.
   // I like to use "window." to really highlight that they're global.
@@ -19,7 +27,7 @@ var drawSpectrogram = function(spectrogramSlice) {
   ctxBuffer.drawImage(window.canvas, 0, 0, window.canvas.width, window.canvas.height);
 
   // By trial-and-error I've found that it seems to be inconsistent for very high frequencies,
-  // so these are just ignored. (Also because we don't send any image-data above that range.)
+  // so these are just ignored. (Also because we don't send any image-data above a certain range.)
   var relevantFrequencies = spectrogramSlice.length - 300;
   for (var i = 0; i < relevantFrequencies; i++) {
     var intensity = spectrogramSlice[i];
@@ -36,6 +44,13 @@ var drawSpectrogram = function(spectrogramSlice) {
   ctx.drawImage(window.canvasBuffer, 0, 0, window.canvas.width, window.canvas.height,
                                      0, 0, window.canvas.width, window.canvas.height);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  // Instead of re-rendering the spectrogram on each canvas,
+  // we'll just render it on one and copy it onto the others,
+  // which will yield a bit of a performance boost.
+  copyCanvas(canvas, document.getElementById('spectrogram2'));
+  copyCanvas(canvas, document.getElementById('spectrogram3'));
+  copyCanvas(canvas, document.getElementById('spectrogram4'));
 };
 
 var drawAudio = function(analyser) {

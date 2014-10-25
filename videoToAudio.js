@@ -57,12 +57,18 @@ var fillAudioBufferWithVideoData = function(audioBuffer, imgData, allocatedSecon
     // sampleRate*n  just becomes, "play this (column) for n seconds".
     for (; audioBufferIndex < oldAudioBufferIndex + sampleRate*timePerCol; audioBufferIndex++) {
       // The minFreq and maxFreq here have just been found by trial-and-error.
-      data[audioBufferIndex] = sumSines(audioBufferIndex, column, 0.1, 2.2);
+      data[audioBufferIndex] = sumSines(audioBufferIndex, column, 0.4, 2.2);
     }
   }
 };
 
-var audioCtx = new AudioContext();
+var AContext = (window.AudioContext ||
+  window.webkitAudioContext ||
+  window.mozAudioContext ||
+  window.oAudioContext ||
+  window.msAudioContext);
+
+var audioCtx = new AContext();
 // timeToRender is how long it should take to "render" the image
 // (i.e. how long it should take to "play" the image.)
 var handleImageData = function(timeToRender, imgData) {
@@ -77,7 +83,7 @@ var handleImageData = function(timeToRender, imgData) {
     src.buffer = audioBuffer;
     src.connect(audioCtx.destination);
 
-    src.start();
+    src.start(0);
   }
 
   playSound();
@@ -86,7 +92,7 @@ var handleImageData = function(timeToRender, imgData) {
 // Get the image data for the asset on the specified url.
 // We're not allowed to read the image data on the file:// protocol,
 // for security purposes, so you have to start a server to run this locally.
-var getImageData = function(url, callback) {
+var getUrlImageData = function(url, callback) {
   var img = new Image();
   img.onload = function() {
     var imgObj = this
@@ -101,14 +107,9 @@ var getImageData = function(url, callback) {
   img.src = url;
 };
 
-var getCamImageData = function(scale, callback) {
-  var cam = document.getElementById("cam")
-    , canvas = document.createElement('canvas')
+var getCamImageData = function(cam, scale, callback) {
+  var canvas = document.createElement('canvas')
     , ctx = canvas.getContext('2d');
-
-  var tmp = document.getElementById("tmp")
-  var tmpCtx = tmp.getContext('2d')
-  tmpCtx.drawImage(cam, 0, 0, tmp.width, tmp.height);
 
   // We have to scale the image for performance reasons.
   // (And because of a bug in fillAudioBufferWithVideoData, see above.)
@@ -118,27 +119,112 @@ var getCamImageData = function(scale, callback) {
   callback(imgData);
 };
 
+window.camEnabled = undefined;
 var handleCam = function(stream) {
-  var cam = document.getElementById("cam");
-  cam.src = window.URL.createObjectURL(stream);
+  window.camEnabled = true;
+
+  var cam1 = document.getElementById("cam1");
+  cam1.src = window.URL.createObjectURL(stream);
+
+  var cam2 = document.getElementById("cam2");
+  cam2.src = window.URL.createObjectURL(stream);
+
+  var cam3 = document.getElementById("cam3");
+  cam3.src = window.URL.createObjectURL(stream);
 };
 
 var camError = function() {
-  // TODO
+  window.camEnabled = false;
 };
 
-document.getElementById('videoToAudio').addEventListener('click', function() {
-  setInterval(function() {
+document.getElementById('camToAudio').addEventListener('click', function() {
+  var cam = document.getElementById('cam1');
+  getCamImageData(cam, 100, handleImageData.bind(undefined, 5));
+});
+
+document.getElementById('cam1').addEventListener('click', function() {
+  getCamImageData(this, 100, handleImageData.bind(undefined, 5));
+});
+
+// Easter eggs!
+document.getElementById('spectrogram2').addEventListener('click', function() {
+  getUrlImageData('img/darth-vader-mini.jpg', handleImageData.bind(undefined, 5));
+});
+
+document.getElementById('spectrogram3').addEventListener('click', function() {
+  getUrlImageData('img/batman100.jpeg', handleImageData.bind(undefined, 5));
+});
+
+document.getElementById('spectrogram4').addEventListener('click', function() {
+  getUrlImageData('img/superman.jpg', handleImageData.bind(undefined, 5));
+});
+
+
+//// Handle the continuous, video, (second) demo
+
+var videoActive = false, videoInterval = undefined;
+var startVideo = function() {
+  document.getElementById('videoToAudio').innerHTML = "Stop";
+  stopInstrument();
+
+  var cam = document.getElementById('cam2');
+  window.videoInterval = setInterval(function() {
+    var scale = 80
+      , timeToRender = 3;
+    getCamImageData(cam, scale, handleImageData.bind(undefined, timeToRender));
+  }, 3000);
+};
+
+var stopVideo = function() {
+  document.getElementById('videoToAudio').innerHTML = "Audiofy the video";
+  clearInterval( window.videoInterval );
+};
+
+var toggleVideo = function() {
+  window.videoActive = !window.videoActive;
+
+  if (videoActive) {
+    startVideo();
+  } else {
+    stopVideo();
+  }
+};
+
+document.getElementById('videoToAudio').addEventListener('click', toggleVideo);
+document.getElementById('cam2').addEventListener('click', toggleVideo);
+
+
+
+
+//// Handle the instrument (third) demo
+
+var instrumentActive = false, instrumentInterval = undefined;
+var startInstrument = function() {
+  document.getElementById('instrumentToAudio').innerHTML = "Stop";
+  stopVideo();
+
+  var cam = document.getElementById('cam3');
+  window.instrumentInterval = setInterval(function() {
     var scale = 50
       , timeToRender = 0.1;
-    getCamImageData(scale, handleImageData.bind(undefined, timeToRender));
+    getCamImageData(cam, scale, handleImageData.bind(undefined, timeToRender));
   }, 90);
+};
 
-  //getImageData('darth-vader.jpg', handleImageData);
-  //getImageData('me100.jpg', handleImageData);
-  //getImageData('nike.jpg', handleImageData);
-  //getImageData('diag.png', handleImageData);
-  //getImageData('freq2.png', handleImageData);
-  //getImageData('cross3.png', handleImageData);
-  //getImageData('batman100.jpeg', handleImageData);
-});
+var stopInstrument = function() {
+  document.getElementById('instrumentToAudio').innerHTML = "Start instrument";
+  clearInterval( window.instrumentInterval );
+};
+
+var toggleInstrument = function() {
+  window.instrumentActive = !window.instrumentActive;
+
+  if (instrumentActive) {
+    startInstrument();
+  } else {
+    stopInstrument();
+  }
+};
+
+document.getElementById('instrumentToAudio').addEventListener('click', toggleInstrument);
+document.getElementById('cam3').addEventListener('click', toggleInstrument);

@@ -1,33 +1,129 @@
 <html>
   <head>
-    <style>
-      #spectrogram {
-        border: 1px solid #000;
-      }
-    </style>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
   </head>
   <body>
-    <video id="cam" autoplay muted width="100" height="100"></video>
-    <img src="darth-vader.jpg" />
-    <!--<img src="diag.png" />
-    <img src="freq2.png" />-->
-    <canvas id="spectrogram" width="300" height="300"></canvas>
-    <canvas id="tmp" width="100" height="100"></canvas>
-    <p>
-      <button id="videoToAudio">Audioify!</button>
-    </p>
+
+    <div class="content">
+      <h1>Recreating the spectrogram face</h1>
+      <p>
+        I recently stumbled upon the face hidden in the spectrogram of the Aphex Twin track
+        called "<a href="https://www.youtube.com/watch?v=M9xMuPWAZW8#t=328">Equation</a>".
+        Intrigued, I decided to try my hand at recreating the effect here on the web.
+      </p>
+
+      <a href="https://www.youtube.com/watch?v=M9xMuPWAZW8#t=328"><img src="img/aphexBW.png" class="img"></a>
+
+      <h2>Spectrogram</h2>
+      <p>
+        So what exactly <i>is</i> a spectrogram?
+      </p>
+      <p>
+        A spectrogram is a visual representation of the frequencies which make up
+        a sound. Say you whistle a pure "<span data-note="261.6" class="data-note">middle C</span>", then a spectrogram would light
+        up right at 261.6 Hz, which is the corresponding
+        frequency for that tone. Likewise, the "<span data-note="440" class="data-note">A</span>" note makes the spectrogram turn
+        bright white at 440 Hz.
+      </p>
+      <p>
+        If you've ever heard of the <a href="http://jeremykun.com/2012/05/27/the-fourier-transform-a-primer/">fourier</a>
+        <a href="http://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/">transform</a>;
+        a spectrogram is simply the frequency spectrum of the sound at each small moment in time, with the amplitude at each frequency
+        visualized as a grayscale value.
+      </p>
+      <p>
+        Click the button to see
+        a live spectrogram of what your computer is hearing right now.
+        Try whistling.
+      </p>
+      <div class="live-demo" id="activate-spectrogram">
+        <div id="activate">
+          <button id="btn-activate" class="pure-button pure-button-primary">Activate spectrogram</button>
+        </div>
+        <canvas id="spectrogram" class="spectrogram" width="650" height="300"></canvas>
+      </div>
+
+
+      <h2>Constructing the face</h2>
+      <p>
+        With this in mind, how would we go about converting an image into a sound, which
+        can then be interpreted by a spectrogram?
+      </p>
+      <p>
+        The solution is simple. Just scan the image, column by column,
+        varying the volume (amplitude) of each frequency (row) as we go along.
+        Say the bottom of the image represents the frequency 3 kHz and the top 15 kHz,
+        then a black pixel on the bottom row means "turn off the 3000 Hz tone", whereas a white pixel means
+        "blast the 3000 Hz tone to the max".
+      </p>
+      <div class="live-demo-cam">
+        <canvas id="spectrogram2" class="spectrogram" width="300" height="300"></canvas>
+        <video id="cam1" autoplay muted height="300"></video>
+        <div class="audiofy">
+          <button id="camToAudio" class="pure-button pure-button-primary">Audiofy yourself</button>
+        </div>
+      </div>
+      <p>
+        <i>Note that you'll need to turn on your speakers and run Chrome for this.</i>
+      </p>
+
+
+      <h2>Video</h2>
+      <p>
+        Let's have a bit of fun. Suppose we just continuously audiofy the video. How would that look/sound?
+        Try interacting with the sound by moving around.
+      </p>
+      <div class="live-demo-video">
+        <canvas id="spectrogram3" class="spectrogram" width="300" height="300"></canvas>
+        <video id="cam2" autoplay muted height="300"></video>
+        <div class="audiofy">
+          <button id="videoToAudio" class="pure-button pure-button-primary">Audiofy the video</button>
+        </div>
+      </div>
+
+      <h2>Take it to the limit</h2>
+      <p>
+        Finally let's pump up the refresh rate significantly. Something interesting starts to happen.
+      </p>
+      <div class="live-demo-video">
+        <canvas id="spectrogram4" class="spectrogram" width="300" height="300"></canvas>
+        <video id="cam3" autoplay muted height="300"></video>
+        <div class="audiofy">
+          <button id="instrumentToAudio" class="pure-button pure-button-primary">Start instrument</button>
+        </div>
+      </div>
+      <p>
+        It starts acting like an instrument! Notice that if you place your finger over the webcam,
+        the sound is muted. You can produce low-pass or high-pass filters by covering only part of webcam.
+      </p>
+
+      <div id="author">
+        Written by <a href="https://github.com/DanielRapp">Daniel Rapp</a>.
+        Check out the code for this <a href="https://github.com/DanielRapp/spectroface">on Github</a>.
+      </div>
+    </div>
+
 
     <script src="videoToAudio.js"></script>
     <script src="spectrogram.js"></script>
+    <script src="data-note.js"></script>
 
     <script>
       // Due to a bug in webkit, we have to wait until the page has loaded
-      // until we can ask for the mic.
+      // before we can ask for the mic.
       window.addEventListener('load', function(e) {
-        navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
-          handleMic(stream, drawAudio);
-          handleCam(stream);
-        }, function(){});
+        document.getElementById('activate').addEventListener('click', function() {
+          var btn = this;
+          navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
+            handleMic(stream, drawAudio);
+            handleCam(stream);
+
+            // Self destruct!
+            btn.parentNode.removeChild(btn);
+          }, camError);
+        })
       }, false);
     </script>
   </body>

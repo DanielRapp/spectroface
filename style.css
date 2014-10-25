@@ -1,0 +1,97 @@
+h1, h2 {
+  font-family: "Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana, sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 60px;
+  margin-left: -3px;
+  margin-bottom: 0px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  font-size: 30px;
+}
+
+#author {
+  text-align: center;
+  font-style: italic;
+  font-size: 15px;
+  margin-top: 100px;
+  font-family: "Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana,sans-serif;
+}
+
+.content {
+  width: 700px;
+  margin: auto;
+  padding-left: 10px;
+  font-family: Georgia,Cambria,"Times New Roman",Times,serif;
+  letter-spacing: 0.01rem;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1.5;
+  margin-top: 30px;
+  margin-bottom: 100px;
+}
+
+.content > p {
+  margin-left: 30px;
+}
+
+.img {
+  margin-top: 20px;
+  width: 450px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.live-demo {
+  margin-left: auto;
+  margin-right: auto;
+  width: 650px;
+}
+
+.live-demo-cam, .live-demo-video {
+  width: 950px;
+}
+
+.data-note {
+  background-color: rgba(0, 0, 255, 0.11);
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 4px;
+}
+
+.data-note:hover {
+  box-shadow: 0px 0px 1px #888 inset;
+}
+
+.spectrogram {
+  border: 1px solid #000;
+  background-color: #000;
+}
+
+#spectrogram2, #spectrogram3, #spectrogram4 {
+  cursor: pointer;
+}
+
+.audiofy {
+  margin-left: 55px;
+}
+
+#cam1, #cam2, #cam3 {
+  cursor: pointer;
+}
+
+.button {
+  font-family: "Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana, sans-serif;
+}
+
+#activate {
+  text-align: center;
+  margin-bottom: 10px;
+}
