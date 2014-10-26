@@ -31,11 +31,25 @@ var sumSines = function(t, freqData, minFreq, maxFreq) {
   return sum;
 };
 
+var averageIntensity = function(imgData) {
+  var sum = 0
+    , num = 0;
+  for (var x = 0; x < imgData.width; x++) {
+    for (var y = 0; y < imgData.height; y++) {
+      sum += getImageDataIntensity( imgData, x, y );
+      num++;
+    }
+  }
+  return sum / num;
+};
+
 // Warning: There a bug here which I haven't been able to figure out.
 // When imgData.height is greater than about 133 (2/3 * 200), no sines are sent out.
 // I.e. if you apply this to a totally white image 200x200 image, then it'll ignore
 // the bottom 1/3.
 var fillAudioBufferWithVideoData = function(audioBuffer, imgData, allocatedSeconds, sampleRate) {
+  var avgIntensity = averageIntensity( imgData );
+
   var data = audioBuffer.getChannelData(0);
   // We'll need a rolling index since we can't use "push" to the audioBuffer
   // (since it's not a normal array).
@@ -49,7 +63,9 @@ var fillAudioBufferWithVideoData = function(audioBuffer, imgData, allocatedSecon
     // Thus the use of "unshift".
     var resolution = 1;
     for (var y = 0; y < imgData.height; y+=resolution) {
-      column.unshift( getImageDataIntensity(imgData, x, y) );
+      // Apply a sort of contrast filter. Technically this isn't what we say we're doing in the text.
+      var intensity = getImageDataIntensity(imgData, x, y);
+      column.unshift( intensity > avgIntensity ? 1 : 0 );
     }
 
     var timePerCol = allocatedSeconds / imgData.width;
