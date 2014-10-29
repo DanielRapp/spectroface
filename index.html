@@ -137,7 +137,10 @@
       window.addEventListener('load', function(e) {
         document.getElementById('activate').addEventListener('click', function() {
           var btn = this;
-          navigator.webkitGetUserMedia({ video: true, audio: true }, function(stream) {
+
+          navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+          navigator.getUserMedia({ video: true, audio: true }, function(stream) {
             handleMic(stream, drawAudio);
             handleCam(stream);
 
